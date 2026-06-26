@@ -1,111 +1,111 @@
-# todo-frontend — Веб-интерфейс для todo-api
+# todo-frontend — Web Interface for todo-api
 
-> Минималистичный фронтенд к todo-api в стиле macOS. Бонусный проект #4.5 — превращает REST API в рабочий продукт.
+> A minimalist frontend for todo-api in macOS style. Bonus project #4.5 — turns a REST API into a working product.
 
 ---
 
-## Для рекрутера
+## For Recruiters
 
-### Что это и зачем
+### What and Why
 
-Бонусный проект между #4 и #5 в roadmap. Цель — показать что backend-разработчик понимает полный стек: умеет не только поднять API, но и подключить к нему интерфейс. Фронт написан без фреймворков и сборщиков — только HTML, CSS, JavaScript — чтобы продемонстрировать понимание работы fetch API, асинхронности и DOM.
+This is a bonus project between #4 and #5 on the roadmap. The goal is to demonstrate that a backend developer understands the full stack: not just setting up an API, but connecting a UI to it. The frontend is written without frameworks or bundlers — just HTML, CSS, and JavaScript — to show understanding of the fetch API, async programming, and DOM manipulation.
 
-Проект представляет собой реальный инструмент который используется ежедневно: todo-менеджер с минималистичным дизайном в стиле macOS, подключённый к Go бэкенду из проекта #4.
+The project is a real tool used daily: a todo manager with a minimalist macOS-style design, connected to a Go backend from project #4.
 
-### Что демонстрирует этот проект
+### What This Project Demonstrates
 
-| Навык | Реализация |
+| Skill | Implementation |
 |---|---|
-| Работа с REST API | `fetch()` для всех CRUD операций: POST, GET, PATCH, DELETE |
-| Асинхронный JS | `async/await` с обработкой ошибок через `try/catch` |
-| DOM-манипуляции | динамическое построение списка задач без фреймворков |
-| Обработка ошибок сети | сообщение пользователю если API недоступен |
-| UI/UX | macOS-минимализм: Inter шрифт, плавные переходы, hover-эффекты |
-| Zero dependencies | один файл `index.html`, никаких npm, никаких сборщиков |
+| REST API integration | `fetch()` for all CRUD operations: POST, GET, PATCH, DELETE |
+| Async JavaScript | `async/await` with error handling via `try/catch` |
+| DOM manipulation | Dynamic task list rendering without frameworks |
+| Network error handling | User-facing message when the API is unavailable |
+| UI/UX | macOS minimalism: Inter font, smooth transitions, hover effects |
+| Zero dependencies | A single `index.html` file, no npm, no bundlers |
 
-### Стек
+### Stack
 
-- **Фронт:** HTML5 + CSS3 + Vanilla JavaScript (ES2022)
-- **Шрифт:** Inter через Google Fonts
-- **Бэкенд:** todo-api (Go 1.22+, `net/http`)
-- **Зависимости:** нет
-- **Запуск:** открыть `index.html` в браузере или через Go файловый сервер
+- **Frontend:** HTML5 + CSS3 + Vanilla JavaScript (ES2022)
+- **Font:** Inter via Google Fonts
+- **Backend:** todo-api (Go 1.22+, `net/http`)
+- **Dependencies:** none
+- **Launch:** open `index.html` in a browser or via a Go file server
 
 ---
 
-## Для разработчика
+## For Developers
 
-### Архитектурные решения
+### Architectural Decisions
 
-#### Почему один файл, а не HTML + CSS + JS раздельно?
+#### Why a single file instead of separate HTML + CSS + JS?
 
-Для проекта без сборщика раздельные файлы создают проблемы с CORS при открытии через `file://`. Один `index.html` с `<style>` и `<script>` внутри открывается напрямую в браузере без какого-либо сервера — нулевой порог запуска.
+For a project without a bundler, separate files cause CORS issues when opened via `file://`. A single `index.html` with inline `<style>` and `<script>` opens directly in the browser with no server required — zero setup friction.
 
-#### Почему перезагрузка списка с сервера после каждого действия, а не локальное обновление стейта?
+#### Why reload the list from the server after each action instead of updating local state?
 
 ```js
-// Локальное обновление — рассинхронизируется с сервером при ошибке
+// Local update — can desync from server on error
 todos = todos.filter(t => t.id !== id)
 render(todos)
 
-// Перезагрузка с сервера — истина всегда на бэке
+// Reload from server — truth always lives on the backend
 await deleteTodo(id)
 await loadTodos() // GET /todos
 ```
 
-Источник правды — сервер. Это устраняет целый класс багов с рассинхронизацией стейта и точно соответствует тому как работают production SPA с REST API.
+The server is the source of truth. This eliminates an entire class of state-sync bugs and accurately reflects how production SPAs with REST APIs work.
 
-#### Почему `async/await`, а не `.then().catch()`?
+#### Why `async/await` instead of `.then().catch()`?
 
-`async/await` читается как синхронный код — проще понимать flow при ревью. `try/catch` явно обозначает границы обработки ошибок. Функционально идентично цепочкам промисов.
+`async/await` reads like synchronous code — easier to follow the flow during review. `try/catch` explicitly marks error-handling boundaries. Functionally identical to promise chains.
 
-#### Почему кнопка удаления только при наведении?
+#### Why show the delete button only on hover?
 
-CSS `opacity: 0` → `opacity: 1` при `:hover` на карточке. Это macOS-конвенция: деструктивные действия скрыты до явного намерения пользователя. Интерфейс остаётся чистым при сканировании списка.
+CSS `opacity: 0` → `opacity: 1` on card `:hover`. This is a macOS convention: destructive actions are hidden until the user shows explicit intent. The interface stays clean while scanning the list.
 
-### Структура
+### Structure
 
 ```
 todo-frontend/
-├── index.html    # всё в одном: HTML разметка + <style> + <script>
+├── index.html    # everything in one file: HTML markup + <style> + <script>
 └── README.md
 ```
 
-### Установка и запуск
+### Installation and Launch
 
 ```bash
-# 1. Запустить бэкенд
+# 1. Start the backend
 cd ../todo-api
 go run .
 
-# 2. Открыть фронт
+# 2. Open the frontend
 cd ../todo-frontend
 open index.html   # macOS
 ```
 
-Или через Go файловый сервер (если нужен http://):
+Or via a Go file server (if http:// is needed):
 
 ```bash
 cd todo-frontend
 python3 -m http.server 3000
-# открыть http://localhost:3000
+# open http://localhost:3000
 ```
 
-### Использование
+### Usage
 
-- **Добавить задачу** — ввести текст в поле сверху, нажать Enter или кнопку +
-- **Отметить выполненной** — нажать чекбокс слева от задачи
-- **Удалить** — навести на карточку, нажать × справа
+- **Add a task** — type text in the input at the top, press Enter or the + button
+- **Mark as done** — click the checkbox to the left of the task
+- **Delete** — hover over the card, click × on the right
 
-### Обработка ошибок
+### Error Handling
 
 ```
-API недоступен (бэкенд не запущен)
-→ Красный баннер вверху: "Не удалось подключиться к серверу"
+API unavailable (backend not running)
+→ Red banner at the top: "Could not connect to server"
 
-Пустой title при добавлении
-→ Поле подсвечивается, запрос не отправляется
+Empty title when adding
+→ Field is highlighted, request is not sent
 
-Сервер вернул ошибку (4xx/5xx)
-→ Консоль + баннер с текстом ошибки из {"error": "..."}
+Server returned an error (4xx/5xx)
+→ Console + banner with error text from {"error": "..."}
 ```
