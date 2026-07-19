@@ -252,45 +252,45 @@
 <body>
 
   <header>
-    <h1>Задачи</h1>
+    <h1>Tasks</h1>
   </header>
 
   <div id="error-banner"></div>
 
   <div class="input-row">
-    <input id="new-todo" type="text" placeholder="Новая задача..." autocomplete="off">
-    <button class="add-btn" id="add-btn" title="Добавить">+</button>
+    <input id="new-todo" type="text" placeholder="New task..." autocomplete="off">
+    <button class="add-btn" id="add-btn" title="Add">+</button>
   </div>
 
   <div class="board">
     <div class="column col-todo" id="col-todo">
       <div class="column-header">
         <span class="column-dot"></span>
-        <span class="column-title">Нужно сделать</span>
+        <span class="column-title">To Do</span>
         <span class="column-count" id="count-todo">0</span>
       </div>
       <ul class="card-list" id="list-todo"></ul>
-      <p class="empty-col" id="empty-todo">Нет задач</p>
+      <p class="empty-col" id="empty-todo">No tasks</p>
     </div>
 
     <div class="column col-progress" id="col-progress">
       <div class="column-header">
         <span class="column-dot"></span>
-        <span class="column-title">В работе</span>
+        <span class="column-title">In Progress</span>
         <span class="column-count" id="count-progress">0</span>
       </div>
       <ul class="card-list" id="list-progress"></ul>
-      <p class="empty-col" id="empty-progress">Нет задач</p>
+      <p class="empty-col" id="empty-progress">No tasks</p>
     </div>
 
     <div class="column col-done" id="col-done">
       <div class="column-header">
         <span class="column-dot"></span>
-        <span class="column-title">Готово</span>
+        <span class="column-title">Done</span>
         <span class="column-count" id="count-done">0</span>
       </div>
       <ul class="card-list" id="list-done"></ul>
-      <p class="empty-col" id="empty-done">Нет задач</p>
+      <p class="empty-col" id="empty-done">No tasks</p>
     </div>
   </div>
 
@@ -299,7 +299,7 @@
 
     const STATUSES = ['todo', 'in_progress', 'done']
 
-    // --- Ошибки ---
+    // --- Errors ---
 
     function showError(message) {
       const b = document.getElementById('error-banner')
@@ -316,12 +316,12 @@
     async function loadTodos() {
       try {
         const res = await fetch(`${API}/todos`)
-        if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`)
+        if (!res.ok) throw new Error(`Server error: ${res.status}`)
         const todos = await res.json()
         clearError()
         renderBoard(todos)
       } catch (e) {
-        showError('Не удалось подключиться к серверу')
+        showError('Could not connect to server')
       }
     }
 
@@ -334,7 +334,7 @@
         })
         if (!res.ok) {
           const data = await res.json()
-          throw new Error(data.error || `Ошибка: ${res.status}`)
+          throw new Error(data.error || `Error: ${res.status}`)
         }
         clearError()
         await loadTodos()
@@ -350,7 +350,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
         })
-        if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`)
+        if (!res.ok) throw new Error(`Server error: ${res.status}`)
         clearError()
         await loadTodos()
       } catch (e) {
@@ -361,7 +361,7 @@
     async function deleteTodo(id) {
       try {
         const res = await fetch(`${API}/todos/${id}`, { method: 'DELETE' })
-        if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`)
+        if (!res.ok) throw new Error(`Server error: ${res.status}`)
         clearError()
         await loadTodos()
       } catch (e) {
@@ -369,7 +369,7 @@
       }
     }
 
-    // --- Рендер ---
+    // --- Render ---
 
     function renderBoard(todos) {
       const buckets = { todo: [], in_progress: [], done: [] }
@@ -378,7 +378,7 @@
         buckets[key].push(t)
       })
 
-      // Сортировка внутри колонки по ID
+      // Sort within a column by ID
       Object.values(buckets).forEach(arr => arr.sort((a, b) => a.id - b.id))
 
       const keys = [
@@ -412,20 +412,20 @@
 
           const prevBtn = document.createElement('button')
           prevBtn.className = 'move-btn'
-          prevBtn.textContent = '← Назад'
+          prevBtn.textContent = '← Back'
           prevBtn.disabled = idx === 0
           prevBtn.addEventListener('click', () => updateStatus(todo.id, STATUSES[idx - 1]))
 
           const nextBtn = document.createElement('button')
           nextBtn.className = 'move-btn'
-          nextBtn.textContent = idx === 1 ? 'Готово →' : 'В работу →'
+          nextBtn.textContent = idx === 1 ? 'Done →' : 'In Progress →'
           nextBtn.disabled = idx === STATUSES.length - 1
           nextBtn.addEventListener('click', () => updateStatus(todo.id, STATUSES[idx + 1]))
 
           const delBtn = document.createElement('button')
           delBtn.className = 'delete-btn'
           delBtn.textContent = '×'
-          delBtn.title = 'Удалить'
+          delBtn.title = 'Delete'
           delBtn.addEventListener('click', () => deleteTodo(todo.id))
 
           footer.appendChild(prevBtn)
@@ -439,7 +439,7 @@
       })
     }
 
-    // --- Ввод ---
+    // --- Input ---
 
     function handleAdd() {
       const input = document.getElementById('new-todo')
@@ -459,7 +459,7 @@
     })
     document.getElementById('add-btn').addEventListener('click', handleAdd)
 
-    // --- Старт ---
+    // --- Start ---
     loadTodos()
   </script>
 </body>

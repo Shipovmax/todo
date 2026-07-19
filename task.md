@@ -1,107 +1,107 @@
 # Task #4.5 — Todo Frontend
 
-## Цель
+## Goal
 
-Написать минималистичный веб-интерфейс для todo-api из проекта #4. Один файл `index.html` без фреймворков и сборщиков — чистый HTML + CSS + Vanilla JS с `fetch()`. Главная учебная цель — понять как фронтенд взаимодействует с REST API: все CRUD операции через fetch, асинхронность через async/await, источник правды на сервере.
+Write a minimalist web interface for the todo-api from project #4. A single `index.html` file, no frameworks or bundlers — plain HTML + CSS + Vanilla JS with `fetch()`. The main learning goal is to understand how a frontend talks to a REST API: all CRUD operations via fetch, asynchrony via async/await, with the server as the source of truth.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Открыть `index.html` в браузере — видны все задачи из API (`GET /todos`)
-- [ ] Ввести текст + Enter → задача появляется в списке (`POST /todos`)
-- [ ] Нажать чекбокс → задача отмечается выполненной визуально и на сервере (`PATCH /todos/{id}`)
-- [ ] Навести на задачу → появляется кнопка удаления; нажать → задача исчезает (`DELETE /todos/{id}`)
-- [ ] Пустой input → запрос не отправляется, поле подсвечивается
-- [ ] API недоступен → показывается сообщение об ошибке пользователю
-- [ ] После каждого действия список перезагружается с сервера
-- [ ] Выполненные задачи визуально отличаются (зачёркнутый текст, приглушённый цвет)
-- [ ] Никаких внешних JS-зависимостей — только один шрифт через Google Fonts
+- [ ] Open `index.html` in a browser — all tasks from the API are visible (`GET /todos`)
+- [ ] Type text + Enter -> the task appears in the list (`POST /todos`)
+- [ ] Click the checkbox -> the task is marked done both visually and on the server (`PATCH /todos/{id}`)
+- [ ] Hover over a task -> a delete button appears; click it -> the task disappears (`DELETE /todos/{id}`)
+- [ ] Empty input -> the request is not sent, the field is highlighted
+- [ ] API unavailable -> an error message is shown to the user
+- [ ] After each action the list is reloaded from the server
+- [ ] Completed tasks are visually distinct (strikethrough text, muted color)
+- [ ] No external JS dependencies — only one font via Google Fonts
 
 ---
 
-## Технические требования
+## Technical Requirements
 
-### Обязательно
+### Mandatory
 
-| Требование | Детали |
+| Requirement | Details |
 |---|---|
-| Структура | один файл `index.html` с `<style>` и `<script>` внутри |
-| HTTP-запросы | `fetch()` с `async/await` для всех операций |
-| Метод запроса | явно указывать `method`, `headers`, `body` в fetch |
-| Ошибки сети | `try/catch` вокруг каждого fetch, сообщение пользователю |
-| Обновление после действия | после POST/PATCH/DELETE вызывать `loadTodos()` |
-| Пустой список | если задач нет — показывать placeholder текст, не пустой экран |
-| Content-Type | `"Content-Type": "application/json"` в headers для POST/PATCH |
-| API URL | константа `const API = "http://localhost:8080"` вверху скрипта |
+| Structure | a single `index.html` file with `<style>` and `<script>` inline |
+| HTTP requests | `fetch()` with `async/await` for all operations |
+| Request method | explicitly specify `method`, `headers`, `body` in fetch |
+| Network errors | `try/catch` around every fetch, message shown to the user |
+| Refresh after action | call `loadTodos()` after every POST/PATCH/DELETE |
+| Empty list | show placeholder text instead of a blank screen when there are no tasks |
+| Content-Type | `"Content-Type": "application/json"` in headers for POST/PATCH |
+| API URL | a `const API = "http://localhost:8080"` constant at the top of the script |
 
-### Запрещено
+### Forbidden
 
-- Сторонние JS-библиотеки (React, Vue, jQuery, axios)
-- npm, node_modules, сборщики (webpack, vite)
-- Локальное изменение массива задач вместо перезагрузки с сервера
-- Inline стили через `element.style` — только CSS классы
+- Third-party JS libraries (React, Vue, jQuery, axios)
+- npm, node_modules, bundlers (webpack, vite)
+- Mutating the local task array instead of reloading from the server
+- Inline styles via `element.style` — CSS classes only
 
 ---
 
-## Темы и навыки которые прокачиваешь
+## Topics and Skills Being Practiced
 
-> Это не просто список — это checklist того, что **обязан использовать** в реализации.
+> This is not just a list — it is a checklist of things the implementation **must** use.
 
-- **`fetch()` с конфигурацией** — `{method, headers, body: JSON.stringify(...)}` для POST/PATCH/DELETE
-- **`async/await`** — все функции работы с API асинхронные: `async function loadTodos()`
-- **`try/catch`** — обёртка вокруг каждого fetch для обработки сетевых ошибок
-- **`response.json()`** — парсинг JSON ответа от API
-- **`response.ok`** — проверка что статус 2xx перед обработкой ответа
+- **`fetch()` with configuration** — `{method, headers, body: JSON.stringify(...)}` for POST/PATCH/DELETE
+- **`async/await`** — all API functions are async: `async function loadTodos()`
+- **`try/catch`** — wraps every fetch call to handle network errors
+- **`response.json()`** — parsing the JSON response from the API
+- **`response.ok`** — checking for a 2xx status before processing the response
 - **DOM API** — `document.createElement`, `element.appendChild`, `element.innerHTML`
 - **Event listeners** — `addEventListener('click', ...)`, `addEventListener('keydown', ...)`
-- **CSS переменные** — `--color-accent`, `--color-text` для единой цветовой схемы
-- **CSS transitions** — `transition: opacity 0.2s` для появления кнопки удаления при hover
+- **CSS variables** — `--color-accent`, `--color-text` for a consistent color scheme
+- **CSS transitions** — `transition: opacity 0.2s` for the delete button appearing on hover
 
 ---
 
-## Структура файлов
+## File Structure
 
 ```
 todo-frontend/
-├── index.html    # HTML + <style> + <script> — всё в одном файле
+├── index.html    # HTML + <style> + <script> — everything in one file
 └── README.md
 ```
 
 ---
 
-## Подсказки по архитектуре
+## Architecture Hints
 
 ```js
-// Константы вверху скрипта
+// Constants at the top of the script
 const API = 'http://localhost:8080'
 
-// Функции для каждой операции с API
-async function loadTodos()           // GET /todos → рендер списка
+// Functions for each API operation
+async function loadTodos()           // GET /todos -> render the list
 async function createTodo(title)     // POST /todos
 async function toggleTodo(id, done)  // PATCH /todos/{id}
 async function deleteTodo(id)        // DELETE /todos/{id}
 
-// Рендер — пересобирает список с нуля
-function renderTodos(todos)          // очищает контейнер, создаёт карточки
+// Render — rebuilds the list from scratch
+function renderTodos(todos)          // clears the container, creates cards
 
-// Обработка ошибок — единая функция
-function showError(message)          // показывает баннер с текстом ошибки
+// Error handling — a single function
+function showError(message)          // shows a banner with the error text
 ```
 
-> Каждая API-функция после успешного выполнения вызывает `loadTodos()` — список всегда актуален относительно сервера.
+> Every API function calls `loadTodos()` after a successful operation — the list is always in sync with the server.
 
 ---
 
 ## Definition of Done
 
-1. Все Acceptance Criteria выполнены
-2. Код запушен на GitHub в репозиторий `todo-frontend`
-3. README.md в репозитории соответствует шаблону проекта
-4. Ты можешь объяснить каждую строку кода вслух без подглядывания
+1. All acceptance criteria are met
+2. Code is pushed to GitHub in the `todo-frontend` repository
+3. README.md in the repository follows the project template
+4. You can explain every line of code out loud without looking it up
 
 ---
 
-## Следующий шаг после сдачи
+## Next Step After Submission
 
-После ревью переходим к **Task #5 — Конкурентный воркер**: goroutines, channels, `sync.WaitGroup`, `context.WithCancel` — fan-out/fan-in паттерн, самая важная тема Go для BigTech собеседований.
+After review we move on to **Task #5 — Concurrent Worker**: goroutines, channels, `sync.WaitGroup`, `context.WithCancel` — the fan-out/fan-in pattern, the most important Go topic for BigTech interviews.

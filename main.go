@@ -9,7 +9,7 @@ func main() {
 	store := NewStore()
 	mux := http.NewServeMux()
 
-	// Frontend — Go сам отдаёт index.html
+	// Frontend — Go serves index.html directly
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
 	})
@@ -21,7 +21,7 @@ func main() {
 	mux.HandleFunc("PATCH /todos/{id}", updateTodo(store))
 	mux.HandleFunc("DELETE /todos/{id}", deleteTodo(store))
 
-	log.Println("Сервер запущен на http://localhost:8080")
+	log.Println("Server started at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", loggingMiddleware(mux)); err != nil {
 		log.Fatal(err)
 	}
