@@ -1,466 +1,537 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --col-todo:        #3a3a3c;
-      --col-progress:    #1c3a5e;
-      --col-done:        #1a3a2a;
-      --accent-todo:     #8e8e93;
-      --accent-progress: #0a84ff;
-      --accent-done:     #30d158;
-      --text:            #f5f5f7;
-      --muted:           #8e8e93;
-      --danger:          #ff453a;
-      --card-bg:         rgba(255,255,255,0.06);
-      --card-border:     rgba(255,255,255,0.1);
-      --input-bg:        rgba(255,255,255,0.08);
-      --input-border:    rgba(255,255,255,0.15);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(to bottom, #000000 0%, #2a2a2e 60%, #3a3a3c 100%);
-      background-attachment: fixed;
-      color: var(--text);
-      min-height: 100vh;
-      padding: 40px 24px 60px;
-    }
-
-    /* Header */
-    header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-    h1 {
-      font-size: 26px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      color: #fff;
-    }
-
-    /* Error banner */
-    #error-banner {
-      display: none;
-      background: rgba(255,69,58,0.15);
-      border: 1px solid rgba(255,69,58,0.4);
-      color: #ff6b63;
-      padding: 10px 16px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      font-size: 14px;
-    }
-    #error-banner.visible { display: block; }
-
-    /* Input row */
-    .input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 32px;
-      max-width: 540px;
-    }
-
-    #new-todo {
-      flex: 1;
-      padding: 12px 16px;
-      background: var(--input-bg);
-      border: 1.5px solid var(--input-border);
-      border-radius: 12px;
-      font-family: inherit;
-      font-size: 15px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    #new-todo::placeholder { color: var(--muted); }
-    #new-todo:focus {
-      border-color: var(--accent-progress);
-      background: rgba(255,255,255,0.1);
-    }
-    #new-todo.error { border-color: var(--danger); }
-
-    .add-btn {
-      width: 44px;
-      height: 44px;
-      border: none;
-      border-radius: 12px;
-      background: var(--accent-progress);
-      color: white;
-      font-size: 26px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.15s, transform 0.1s;
-      flex-shrink: 0;
-    }
-    .add-btn:hover { opacity: 0.85; }
-    .add-btn:active { transform: scale(0.94); }
-
-    /* Kanban board */
-    .board {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      align-items: start;
-    }
-
-    /* Column */
-    .column {
-      border-radius: 16px;
-      padding: 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
-      min-height: 200px;
-    }
-
-    .column-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .column-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .col-todo    .column-dot { background: var(--accent-todo); }
-    .col-progress .column-dot { background: var(--accent-progress); }
-    .col-done    .column-dot { background: var(--accent-done); }
-
-    .column-title {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--muted);
-    }
-    .column-count {
-      margin-left: auto;
-      font-size: 13px;
-      color: var(--muted);
-      background: rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 1px 8px;
-    }
-
-    /* Empty state */
-    .empty-col {
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      padding: 24px 0;
-      opacity: 0.6;
-    }
-
-    /* Card */
-    .card-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .todo-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 12px 12px 10px;
-      transition: background 0.15s, box-shadow 0.15s;
-      position: relative;
-    }
-    .todo-card:hover {
-      background: rgba(255,255,255,0.09);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    }
-
-    .card-title {
-      font-size: 14px;
-      line-height: 1.45;
-      word-break: break-word;
-      margin-bottom: 10px;
-      padding-right: 20px;
-    }
-    .col-done .card-title {
-      text-decoration: line-through;
-      color: var(--muted);
-    }
-
-    /* Card footer: move buttons + delete */
-    .card-footer {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .move-btn {
-      border: none;
-      background: rgba(255,255,255,0.07);
-      color: var(--muted);
-      font-size: 13px;
-      cursor: pointer;
-      border-radius: 6px;
-      padding: 3px 8px;
-      line-height: 1.4;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-    .move-btn:hover {
-      background: rgba(255,255,255,0.14);
-      color: #fff;
-    }
-    .move-btn:disabled {
-      opacity: 0.2;
-      cursor: default;
-    }
-    .move-btn:disabled:hover {
-      background: rgba(255,255,255,0.07);
-      color: var(--muted);
-    }
-
-    .delete-btn {
-      margin-left: auto;
-      opacity: 0;
-      border: none;
-      background: none;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 2px 5px;
-      border-radius: 6px;
-      transition: opacity 0.15s, color 0.15s;
-    }
-    .todo-card:hover .delete-btn { opacity: 1; }
-    .delete-btn:hover { color: var(--danger); }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>Tasks</h1>
-  </header>
-
-  <div id="error-banner"></div>
-
-  <div class="input-row">
-    <input id="new-todo" type="text" placeholder="New task..." autocomplete="off">
-    <button class="add-btn" id="add-btn" title="Add">+</button>
-  </div>
-
-  <div class="board">
-    <div class="column col-todo" id="col-todo">
-      <div class="column-header">
-        <span class="column-dot"></span>
-        <span class="column-title">To Do</span>
-        <span class="column-count" id="count-todo">0</span>
-      </div>
-      <ul class="card-list" id="list-todo"></ul>
-      <p class="empty-col" id="empty-todo">No tasks</p>
-    </div>
-
-    <div class="column col-progress" id="col-progress">
-      <div class="column-header">
-        <span class="column-dot"></span>
-        <span class="column-title">In Progress</span>
-        <span class="column-count" id="count-progress">0</span>
-      </div>
-      <ul class="card-list" id="list-progress"></ul>
-      <p class="empty-col" id="empty-progress">No tasks</p>
-    </div>
-
-    <div class="column col-done" id="col-done">
-      <div class="column-header">
-        <span class="column-dot"></span>
-        <span class="column-title">Done</span>
-        <span class="column-count" id="count-done">0</span>
-      </div>
-      <ul class="card-list" id="list-done"></ul>
-      <p class="empty-col" id="empty-done">No tasks</p>
-    </div>
-  </div>
-
-  <script>
-    const API = ''
-
-    const STATUSES = ['todo', 'in_progress', 'done']
-
-    // --- Errors ---
-
-    function showError(message) {
-      const b = document.getElementById('error-banner')
-      b.textContent = message
-      b.classList.add('visible')
-    }
-
-    function clearError() {
-      document.getElementById('error-banner').classList.remove('visible')
-    }
-
-    // --- API ---
-
-    async function loadTodos() {
-      try {
-        const res = await fetch(`${API}/todos`)
-        if (!res.ok) throw new Error(`Server error: ${res.status}`)
-        const todos = await res.json()
-        clearError()
-        renderBoard(todos)
-      } catch (e) {
-        showError('Could not connect to server')
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --col-todo: #3a3a3c;
+        --col-progress: #1c3a5e;
+        --col-done: #1a3a2a;
+        --accent-todo: #8e8e93;
+        --accent-progress: #0a84ff;
+        --accent-done: #30d158;
+        --text: #f5f5f7;
+        --muted: #8e8e93;
+        --danger: #ff453a;
+        --card-bg: rgba(255, 255, 255, 0.06);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --input-bg: rgba(255, 255, 255, 0.08);
+        --input-border: rgba(255, 255, 255, 0.15);
       }
-    }
 
-    async function createTodo(title) {
-      try {
-        const res = await fetch(`${API}/todos`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title })
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.error || `Error: ${res.status}`)
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(
+          to bottom,
+          #000000 0%,
+          #2a2a2e 60%,
+          #3a3a3c 100%
+        );
+        background-attachment: fixed;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 40px 24px 60px;
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      h1 {
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+        color: #fff;
+      }
+
+      /* Error banner */
+      #error-banner {
+        display: none;
+        background: rgba(255, 69, 58, 0.15);
+        border: 1px solid rgba(255, 69, 58, 0.4);
+        color: #ff6b63;
+        padding: 10px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+      #error-banner.visible {
+        display: block;
+      }
+
+      /* Input row */
+      .input-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 32px;
+        max-width: 540px;
+      }
+
+      #new-todo {
+        flex: 1;
+        padding: 12px 16px;
+        background: var(--input-bg);
+        border: 1.5px solid var(--input-border);
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 15px;
+        color: var(--text);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      #new-todo::placeholder {
+        color: var(--muted);
+      }
+      #new-todo:focus {
+        border-color: var(--accent-progress);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      #new-todo.error {
+        border-color: var(--danger);
+      }
+
+      .add-btn {
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 12px;
+        background: var(--accent-progress);
+        color: white;
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+        flex-shrink: 0;
+      }
+      .add-btn:hover {
+        opacity: 0.85;
+      }
+      .add-btn:active {
+        transform: scale(0.94);
+      }
+
+      /* Kanban board */
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      /* Column */
+      .column {
+        border-radius: 16px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        min-height: 200px;
+      }
+
+      .column-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .column-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .col-todo .column-dot {
+        background: var(--accent-todo);
+      }
+      .col-progress .column-dot {
+        background: var(--accent-progress);
+      }
+      .col-done .column-dot {
+        background: var(--accent-done);
+      }
+
+      .column-title {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--muted);
+      }
+      .column-count {
+        margin-left: auto;
+        font-size: 13px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 1px 8px;
+      }
+
+      /* Empty state */
+      .empty-col {
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 24px 0;
+        opacity: 0.6;
+      }
+
+      /* Card */
+      .card-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .todo-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 12px 12px 10px;
+        transition:
+          background 0.15s,
+          box-shadow 0.15s;
+        position: relative;
+      }
+      .todo-card:hover {
+        background: rgba(255, 255, 255, 0.09);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-title {
+        font-size: 14px;
+        line-height: 1.45;
+        word-break: break-word;
+        margin-bottom: 10px;
+        padding-right: 20px;
+      }
+      .col-done .card-title {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      /* Card footer: move buttons + delete */
+      .card-footer {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .move-btn {
+        border: none;
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--muted);
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 3px 8px;
+        line-height: 1.4;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        white-space: nowrap;
+      }
+      .move-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+      }
+      .move-btn:disabled {
+        opacity: 0.2;
+        cursor: default;
+      }
+      .move-btn:disabled:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--muted);
+      }
+
+      .delete-btn {
+        margin-left: auto;
+        opacity: 0;
+        border: none;
+        background: none;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 5px;
+        border-radius: 6px;
+        transition:
+          opacity 0.15s,
+          color 0.15s;
+      }
+      .todo-card:hover .delete-btn {
+        opacity: 1;
+      }
+      .delete-btn:hover {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Tasks</h1>
+    </header>
+
+    <div id="error-banner"></div>
+
+    <div class="input-row">
+      <input
+        id="new-todo"
+        type="text"
+        placeholder="New task..."
+        autocomplete="off"
+      />
+      <button class="add-btn" id="add-btn" title="Add">+</button>
+    </div>
+
+    <div class="board">
+      <div class="column col-todo" id="col-todo">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title">To Do</span>
+          <span class="column-count" id="count-todo">0</span>
+        </div>
+        <ul class="card-list" id="list-todo"></ul>
+        <p class="empty-col" id="empty-todo">No tasks</p>
+      </div>
+
+      <div class="column col-progress" id="col-progress">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title">In Progress</span>
+          <span class="column-count" id="count-progress">0</span>
+        </div>
+        <ul class="card-list" id="list-progress"></ul>
+        <p class="empty-col" id="empty-progress">No tasks</p>
+      </div>
+
+      <div class="column col-done" id="col-done">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title">Done</span>
+          <span class="column-count" id="count-done">0</span>
+        </div>
+        <ul class="card-list" id="list-done"></ul>
+        <p class="empty-col" id="empty-done">No tasks</p>
+      </div>
+    </div>
+
+    <script>
+      const API = "";
+
+      const STATUSES = ["todo", "in_progress", "done"];
+
+      // --- Errors ---
+
+      function showError(message) {
+        const b = document.getElementById("error-banner");
+        b.textContent = message;
+        b.classList.add("visible");
+      }
+
+      function clearError() {
+        document.getElementById("error-banner").classList.remove("visible");
+      }
+
+      // --- API ---
+
+      async function loadTodos() {
+        try {
+          const res = await fetch(`${API}/todos`);
+          if (!res.ok) throw new Error(`Server error: ${res.status}`);
+          const todos = await res.json();
+          clearError();
+          renderBoard(todos);
+        } catch (e) {
+          showError("Could not connect to server");
         }
-        clearError()
-        await loadTodos()
-      } catch (e) {
-        showError(e.message)
       }
-    }
 
-    async function updateStatus(id, status) {
-      try {
-        const res = await fetch(`${API}/todos/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        })
-        if (!res.ok) throw new Error(`Server error: ${res.status}`)
-        clearError()
-        await loadTodos()
-      } catch (e) {
-        showError(e.message)
+      async function createTodo(title) {
+        try {
+          const res = await fetch(`${API}/todos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title }),
+          });
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || `Error: ${res.status}`);
+          }
+          clearError();
+          await loadTodos();
+        } catch (e) {
+          showError(e.message);
+        }
       }
-    }
 
-    async function deleteTodo(id) {
-      try {
-        const res = await fetch(`${API}/todos/${id}`, { method: 'DELETE' })
-        if (!res.ok) throw new Error(`Server error: ${res.status}`)
-        clearError()
-        await loadTodos()
-      } catch (e) {
-        showError(e.message)
+      async function updateStatus(id, status) {
+        try {
+          const res = await fetch(`${API}/todos/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          });
+          if (!res.ok) throw new Error(`Server error: ${res.status}`);
+          clearError();
+          await loadTodos();
+        } catch (e) {
+          showError(e.message);
+        }
       }
-    }
 
-    // --- Render ---
-
-    function renderBoard(todos) {
-      const buckets = { todo: [], in_progress: [], done: [] }
-      todos.forEach(t => {
-        const key = buckets[t.status] ? t.status : 'todo'
-        buckets[key].push(t)
-      })
-
-      // Sort within a column by ID
-      Object.values(buckets).forEach(arr => arr.sort((a, b) => a.id - b.id))
-
-      const keys = [
-        { status: 'todo',        listId: 'list-todo',     countId: 'count-todo',     emptyId: 'empty-todo' },
-        { status: 'in_progress', listId: 'list-progress', countId: 'count-progress', emptyId: 'empty-progress' },
-        { status: 'done',        listId: 'list-done',     countId: 'count-done',     emptyId: 'empty-done' },
-      ]
-
-      keys.forEach(({ status, listId, countId, emptyId }) => {
-        const list  = document.getElementById(listId)
-        const count = document.getElementById(countId)
-        const empty = document.getElementById(emptyId)
-        const items = buckets[status]
-
-        list.innerHTML = ''
-        count.textContent = items.length
-        empty.style.display = items.length === 0 ? 'block' : 'none'
-
-        const idx = STATUSES.indexOf(status)
-
-        items.forEach(todo => {
-          const li = document.createElement('li')
-          li.className = 'todo-card'
-
-          const title = document.createElement('p')
-          title.className = 'card-title'
-          title.textContent = todo.title
-
-          const footer = document.createElement('div')
-          footer.className = 'card-footer'
-
-          const prevBtn = document.createElement('button')
-          prevBtn.className = 'move-btn'
-          prevBtn.textContent = '← Back'
-          prevBtn.disabled = idx === 0
-          prevBtn.addEventListener('click', () => updateStatus(todo.id, STATUSES[idx - 1]))
-
-          const nextBtn = document.createElement('button')
-          nextBtn.className = 'move-btn'
-          nextBtn.textContent = idx === 1 ? 'Done →' : 'In Progress →'
-          nextBtn.disabled = idx === STATUSES.length - 1
-          nextBtn.addEventListener('click', () => updateStatus(todo.id, STATUSES[idx + 1]))
-
-          const delBtn = document.createElement('button')
-          delBtn.className = 'delete-btn'
-          delBtn.textContent = '×'
-          delBtn.title = 'Delete'
-          delBtn.addEventListener('click', () => deleteTodo(todo.id))
-
-          footer.appendChild(prevBtn)
-          footer.appendChild(nextBtn)
-          footer.appendChild(delBtn)
-
-          li.appendChild(title)
-          li.appendChild(footer)
-          list.appendChild(li)
-        })
-      })
-    }
-
-    // --- Input ---
-
-    function handleAdd() {
-      const input = document.getElementById('new-todo')
-      const title = input.value.trim()
-      if (!title) {
-        input.classList.add('error')
-        input.focus()
-        setTimeout(() => input.classList.remove('error'), 1500)
-        return
+      async function deleteTodo(id) {
+        try {
+          const res = await fetch(`${API}/todos/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error(`Server error: ${res.status}`);
+          clearError();
+          await loadTodos();
+        } catch (e) {
+          showError(e.message);
+        }
       }
-      input.value = ''
-      createTodo(title)
-    }
 
-    document.getElementById('new-todo').addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleAdd()
-    })
-    document.getElementById('add-btn').addEventListener('click', handleAdd)
+      // --- Render ---
 
-    // --- Start ---
-    loadTodos()
-  </script>
-</body>
+      function renderBoard(todos) {
+        const buckets = { todo: [], in_progress: [], done: [] };
+        todos.forEach((t) => {
+          const key = buckets[t.status] ? t.status : "todo";
+          buckets[key].push(t);
+        });
+
+        // Sort within a column by ID
+        Object.values(buckets).forEach((arr) =>
+          arr.sort((a, b) => a.id - b.id),
+        );
+
+        const keys = [
+          {
+            status: "todo",
+            listId: "list-todo",
+            countId: "count-todo",
+            emptyId: "empty-todo",
+          },
+          {
+            status: "in_progress",
+            listId: "list-progress",
+            countId: "count-progress",
+            emptyId: "empty-progress",
+          },
+          {
+            status: "done",
+            listId: "list-done",
+            countId: "count-done",
+            emptyId: "empty-done",
+          },
+        ];
+
+        keys.forEach(({ status, listId, countId, emptyId }) => {
+          const list = document.getElementById(listId);
+          const count = document.getElementById(countId);
+          const empty = document.getElementById(emptyId);
+          const items = buckets[status];
+
+          list.innerHTML = "";
+          count.textContent = items.length;
+          empty.style.display = items.length === 0 ? "block" : "none";
+
+          const idx = STATUSES.indexOf(status);
+
+          items.forEach((todo) => {
+            const li = document.createElement("li");
+            li.className = "todo-card";
+
+            const title = document.createElement("p");
+            title.className = "card-title";
+            title.textContent = todo.title;
+
+            const footer = document.createElement("div");
+            footer.className = "card-footer";
+
+            const prevBtn = document.createElement("button");
+            prevBtn.className = "move-btn";
+            prevBtn.textContent = "← Back";
+            prevBtn.disabled = idx === 0;
+            prevBtn.addEventListener("click", () =>
+              updateStatus(todo.id, STATUSES[idx - 1]),
+            );
+
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "move-btn";
+            nextBtn.textContent = idx === 1 ? "Done →" : "In Progress →";
+            nextBtn.disabled = idx === STATUSES.length - 1;
+            nextBtn.addEventListener("click", () =>
+              updateStatus(todo.id, STATUSES[idx + 1]),
+            );
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "delete-btn";
+            delBtn.textContent = "×";
+            delBtn.title = "Delete";
+            delBtn.addEventListener("click", () => deleteTodo(todo.id));
+
+            footer.appendChild(prevBtn);
+            footer.appendChild(nextBtn);
+            footer.appendChild(delBtn);
+
+            li.appendChild(title);
+            li.appendChild(footer);
+            list.appendChild(li);
+          });
+        });
+      }
+
+      // --- Input ---
+
+      function handleAdd() {
+        const input = document.getElementById("new-todo");
+        const title = input.value.trim();
+        if (!title) {
+          input.classList.add("error");
+          input.focus();
+          setTimeout(() => input.classList.remove("error"), 1500);
+          return;
+        }
+        input.value = "";
+        createTodo(title);
+      }
+
+      document.getElementById("new-todo").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleAdd();
+      });
+      document.getElementById("add-btn").addEventListener("click", handleAdd);
+
+      // --- Start ---
+      loadTodos();
+    </script>
+  </body>
 </html>
